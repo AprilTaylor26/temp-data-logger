@@ -2,7 +2,11 @@ import datetime
 import csv
 import os
 
-CSV_PATH = "ZooData.csv"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+CSV_PATH = BASE_DIR / "ZooData.csv"
+print("Using CSV file at:", CSV_PATH)
 DATE_FORMAT = "%d/%m/%Y"
 
 
@@ -22,14 +26,13 @@ def validate_date(date_str: str) -> datetime.date | None:
         return None
 
 
-def ensure_csv_has_header(path: str) -> None:
+def ensure_csv_has_header(path: Path) -> None:
     """Create file + header if it doesn't exist or is empty."""
-    file_exists = os.path.exists(path)
-    if not file_exists or os.path.getsize(path) == 0:
-        with open(path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(["date", "temp_f", "temp_c"])
-
+    file_exists = path.exists()
+if (not file_exists) or path.stat().st_size == 0:
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["date", "temp_f", "temp_c"])
 
 def insert_row(path: str, entry_date: str, temp_f: float, temp_c: float) -> None:
     ensure_csv_has_header(path)
@@ -46,11 +49,11 @@ def read_rows(path: str) -> list[dict]:
         return list(reader)
 
 
-def view_data(path: str) -> None:
-    rows = read_rows(path)
-    if not rows:
-        print(f"\nNo data found in {path}.")
-        return
+def view_data(path: Path) -> None:
+    ensure_csv_has_header(path)
+    with open(path, "r", newline="", encoding="utf-8") as f:
+        print(f"\nContents of {path}:")
+        print(f.read())
 
     print(f"\nContents of {path} ({len(rows)} records):")
     for r in rows:
@@ -161,6 +164,7 @@ def menu() -> None:
                 running = False
             case _:
                 print("\nError: Invalid choice. Please try again.")
+
 
 
 menu()
