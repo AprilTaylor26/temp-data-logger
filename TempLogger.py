@@ -2,8 +2,10 @@ import datetime
 import csv
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-CSV_PATH = BASE_DIR / "ZooData.csv"
+print("SCRIPT PATH:", Path(__file__).resolve())
+print("CSV PATH:", (Path(__file__).resolve().parent / "ZooData.csv"))
+#BASE_DIR = Path(__file__).resolve().parent
+#CSV_PATH = BASE_DIR / "ZooData.csv"
 DATE_FORMAT = "%d/%m/%Y"
 
 print("Using CSV file at:", CSV_PATH)
@@ -168,3 +170,4 @@ def menu() -> None:
 
 
 menu()
+
