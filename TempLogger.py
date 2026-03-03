@@ -1,13 +1,12 @@
 import datetime
 import csv
-import os
-
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 CSV_PATH = BASE_DIR / "ZooData.csv"
-print("Using CSV file at:", CSV_PATH)
 DATE_FORMAT = "%d/%m/%Y"
+
+print("Using CSV file at:", CSV_PATH)
 
 
 def now_ts() -> str:
@@ -28,21 +27,21 @@ def validate_date(date_str: str) -> datetime.date | None:
 
 def ensure_csv_has_header(path: Path) -> None:
     """Create file + header if it doesn't exist or is empty."""
-    file_exists = path.exists()
-if (not file_exists) or path.stat().st_size == 0:
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["date", "temp_f", "temp_c"])
+    if (not path.exists()) or path.stat().st_size == 0:
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["date", "temp_f", "temp_c"])
 
-def insert_row(path: str, entry_date: str, temp_f: float, temp_c: float) -> None:
+
+def insert_row(path: Path, entry_date: str, temp_f: float, temp_c: float) -> None:
     ensure_csv_has_header(path)
     with open(path, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow([entry_date, f"{temp_f:.2f}", f"{temp_c:.2f}"])
 
 
-def read_rows(path: str) -> list[dict]:
-    if not os.path.exists(path) or os.path.getsize(path) == 0:
+def read_rows(path: Path) -> list[dict]:
+    if (not path.exists()) or path.stat().st_size == 0:
         return []
     with open(path, "r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -51,9 +50,11 @@ def read_rows(path: str) -> list[dict]:
 
 def view_data(path: Path) -> None:
     ensure_csv_has_header(path)
-    with open(path, "r", newline="", encoding="utf-8") as f:
-        print(f"\nContents of {path}:")
-        print(f.read())
+    rows = read_rows(path)
+
+    if not rows:
+        print(f"\nNo records found in {path}.")
+        return
 
     print(f"\nContents of {path} ({len(rows)} records):")
     for r in rows:
@@ -92,7 +93,7 @@ def input_entries() -> None:
             print(f"Failed to save entry: {e}")
 
 
-def generate_report(path: str) -> None:
+def generate_report(path: Path) -> None:
     rows = read_rows(path)
     if not rows:
         print("\nNo data available to generate a report.")
@@ -107,8 +108,7 @@ def generate_report(path: str) -> None:
     min_f, max_f = min(temps_f), max(temps_f)
     min_c, max_c = min(temps_c), max(temps_c)
 
-    # Most recent by date (uses validated date format)
-    def parse_row_date(r):
+    def parse_row_date(r: dict) -> datetime.date:
         return datetime.datetime.strptime(r["date"], DATE_FORMAT).date()
 
     most_recent = max(rows, key=parse_row_date)
@@ -129,16 +129,17 @@ def generate_report(path: str) -> None:
 
     print("\n" + "\n".join(report_lines))
 
-    # Optional: save report to text file
     save = input("\nSave report to file? (y/n): ").strip().lower()
     if save == "y":
-        report_path = "ZooData_Report.txt"
+        report_path = BASE_DIR / "ZooData_Report.txt"
         with open(report_path, "w", encoding="utf-8") as f:
             f.write("\n".join(report_lines))
         print(f"Report saved to {report_path}")
 
 
 def menu() -> None:
+    ensure_csv_has_header(CSV_PATH)
+
     running = True
     while running:
         print("\nApril's Spreadsheet Automation Menu")
@@ -164,7 +165,6 @@ def menu() -> None:
                 running = False
             case _:
                 print("\nError: Invalid choice. Please try again.")
-
 
 
 menu()
