@@ -43,8 +43,9 @@ def insert_row(path: Path, entry_date: str, temp_f: float, temp_c: float) -> Non
 
 
 def read_rows(path: Path) -> list[dict]:
-    if (not path.exists()) or path.stat().st_size == 0:
+    if not path.exists() or path.stat().st_size == 0:
         return []
+
     with open(path, "r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         return list(reader)
@@ -161,7 +162,12 @@ def menu() -> None:
                 view_data(CSV_PATH)
             case "3":
                 print(f"\nOption 3 selected at {now_ts()}")
-                generate_report(CSV_PATH)
+                try:
+                    generate_report(CSV_PATH)
+                except Exception as e:
+                    import traceback
+                    print("Report generation failed:", e)
+                    traceback.print_exc()
             case "4":
                 print("\nExiting Program. Bye!")
                 running = False
@@ -169,6 +175,5 @@ def menu() -> None:
                 print("\nError: Invalid choice. Please try again.")
 
 
-menu()
-
-
+if __name__ == "__main__":
+    menu()
